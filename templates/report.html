@@ -1,0 +1,6 @@
+<h2>Inspection Report</h2>
+{% for inspection in inspections %}
+    <p>
+        I found wall #{{ inspection.wall_number }}{% if inspection.has_crack %} and it had a crack{% else %} with no crack{% endif %}.
+    </p>
+{% endfor %} 

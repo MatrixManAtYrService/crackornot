@@ -6,15 +6,21 @@ client = TestClient(app)
 def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
-    assert "Todo List" in response.text
+    assert "Wall Inspector" in response.text
 
-def test_create_and_list_todo():
-    # Create a todo
-    response = client.post("/todos", data={"todo": "Test the API"})
+def test_inspect_walls():
+    # Inspect first wall - no crack
+    response = client.post("/inspect", data={"has_crack": ""})
     assert response.status_code == 200
-    assert "Test the API" in response.text
+    assert "wall #1" in response.text
+    assert "with no crack" in response.text
 
-    # List todos
-    response = client.get("/todos", headers={"HX-Request": "true"})
+    # Inspect second wall - with crack
+    response = client.post("/inspect", data={"has_crack": "true"})
     assert response.status_code == 200
-    assert "Test the API" in response.text
+    assert "wall #2" in response.text
+    assert "had a crack" in response.text
+    assert "wall #1" in response.text  # Previous wall should still be there
+
+    # Verify the narrative format
+    assert response.text.count("<p>") == 2  # Should have two paragraphs

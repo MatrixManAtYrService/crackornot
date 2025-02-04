@@ -1,67 +1,40 @@
-from fastapi import FastAPI, Request, Form, Header
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.encoders import jsonable_encoder
-from typing import Annotated, Union
-from uuid import uuid4
+from typing import Annotated
+from dataclasses import dataclass
+from typing import List
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-class Todo:
-    def __init__(self, text: str):
-        self.id = uuid4()
-        self.text = text
-        self.done = False
+@dataclass
+class WallInspection:
+    wall_number: int
+    has_crack: bool
 
-todos = []
+# Global state (in a real app, this would be a database)
+inspections: List[WallInspection] = []
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
-
-@app.get("/todos", response_class=HTMLResponse)
-async def list_todos(request: Request, hx_request: Annotated[Union[str, None], Header()] = None):
-    if hx_request:
-        return templates.TemplateResponse(
-            request=request, name="todos.html", context={"todos": todos}
-        )
-    return JSONResponse(content=jsonable_encoder(todos))
-
-@app.post("/todos", response_class=HTMLResponse)
-async def create_todo(request: Request, todo: Annotated[str, Form()]):
-    todos.append(Todo(todo))
     return templates.TemplateResponse(
-        request=request, name="todos.html", context={"todos": todos}
+        request=request, 
+        name="index.html",
+        context={"inspections": inspections}
     )
 
-@app.put("/todos/{todo_id}", response_class=HTMLResponse)
-async def update_todo(request: Request, todo_id: str, text: Annotated[str, Form()]):
-    for index, todo in enumerate(todos):
-        if str(todo.id) == todo_id:
-            todo.text = text
-            break
+@app.post("/inspect", response_class=HTMLResponse)
+async def inspect_wall(
+    request: Request,
+    has_crack: Annotated[bool, Form()] = False
+):
+    # Add new inspection with incremented wall number
+    next_wall = len(inspections) + 1
+    inspections.append(WallInspection(wall_number=next_wall, has_crack=has_crack))
+    
     return templates.TemplateResponse(
-        request=request, name="todos.html", context={"todos": todos}
-    )
-
-@app.post("/todos/{todo_id}/toggle", response_class=HTMLResponse)
-async def toggle_todo(request: Request, todo_id: str):
-    for index, todo in enumerate(todos):
-        if str(todo.id) == todo_id:
-            todos[index].done = not todos[index].done
-            break
-    return templates.TemplateResponse(
-        request=request, name="todos.html", context={"todos": todos}
-    )
-
-@app.post("/todos/{todo_id}/delete", response_class=HTMLResponse)
-async def delete_todo(request: Request, todo_id: str):
-    for index, todo in enumerate(todos):
-        if str(todo.id) == todo_id:
-            del todos[index]
-            break
-    return templates.TemplateResponse(
-        request=request, name="todos.html", context={"todos": todos}
+        request=request,
+        name="report.html",
+        context={"inspections": inspections}
     ) 
