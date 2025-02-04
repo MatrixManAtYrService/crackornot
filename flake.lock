@@ -18,6 +18,18 @@
         "type": "github"
       }
     },
+    "htmx": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-Tt+p9xYPrcoqVfxsnrj1XMs/cmNlPLvlLvMYNVFjd/g=",
+        "type": "file",
+        "url": "https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1738410390,
@@ -83,10 +95,24 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "htmx": "htmx",
         "nixpkgs": "nixpkgs",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
+        "simple-css": "simple-css",
         "uv2nix": "uv2nix"
+      }
+    },
+    "simple-css": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-SsVO8FUnWKt7C9yl9HNIvL7X1RNvGNFPT4oqGt60PlU=",
+        "type": "file",
+        "url": "https://cdn.simplecss.org/simple.min.css"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://cdn.simplecss.org/simple.min.css"
       }
     },
     "systems": {

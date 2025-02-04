@@ -22,14 +22,32 @@
       inputs.uv2nix.follows = "uv2nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Add static dependencies
+    htmx = {
+      url = "https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js";
+      flake = false;
+    };
+
+    simple-css = {
+      url = "https://cdn.simplecss.org/simple.min.css";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, uv2nix, pyproject-nix, pyproject-build-systems }:
+  outputs = { self, nixpkgs, flake-utils, uv2nix, pyproject-nix, pyproject-build-systems, htmx, simple-css }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
         };
+
+        # Create static files directory
+        static-files = pkgs.runCommand "static-files" {} ''
+          mkdir -p $out/static
+          cp ${htmx} $out/static/htmx.min.js
+          cp ${simple-css} $out/static/simple.min.css
+        '';
 
         python = pkgs.python312;
         workspace = uv2nix.lib.workspace.loadWorkspace { 
@@ -104,6 +122,7 @@
           serve = {
             type = "app";
             program = "${pkgs.writeShellScript "serve" ''
+              export STATIC_FILES_PATH=${static-files}/static
               ${pythonEnv}/bin/uvicorn crackornot:app --host 127.0.0.1 --port 8000 --reload
             ''}";
           };

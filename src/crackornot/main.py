@@ -1,11 +1,18 @@
+import os
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import Annotated
 from dataclasses import dataclass
 from typing import List
 
 app = FastAPI()
+
+# Mount static files from the environment-provided path
+static_path = os.environ.get("STATIC_FILES_PATH", "static")
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+
 templates = Jinja2Templates(directory="templates")
 
 @dataclass
