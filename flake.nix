@@ -42,28 +42,35 @@
 
         # Add test overrides
         pyprojectOverrides = final: prev: {
-          hello-world = prev.hello-world.overrideAttrs (old: {
+          crackornot = prev.crackornot.overrideAttrs (old: {
             passthru = old.passthru // {
               tests = let
-                virtualenv = final.mkVirtualEnv "hello-world-test-env" {
-                  hello-world = [ "test" ];
+                virtualenv = final.mkVirtualEnv "crackornot-test-env" {
+                  crackornot = [ "test" ];
                 };
               in (old.tests or { }) // {
                 pytest = pkgs.stdenv.mkDerivation {
-                  name = "${final.hello-world.name}-pytest";
-                  inherit (final.hello-world) src;
+                  name = "${final.crackornot.name}-pytest";
+                  inherit (final.crackornot) src;
                   nativeBuildInputs = [ virtualenv ];
                   dontConfigure = true;
 
                   buildPhase = ''
                     runHook preBuild
-                    pytest tests/
+                    # Copy test files to the right location
+                    cp -r ${final.crackornot.src}/tests .
+                    cp -r ${final.crackornot.src}/src .
+                    # Add verbose flag and set PYTHONPATH
+                    PYTHONPATH=$PWD/src pytest -v tests/
                     runHook postBuild
                   '';
 
+                  # Force Nix to see this as a new build
+                  PYTEST_ADDOPTS="--import-mode=importlib";
+
                   installPhase = ''
                     runHook preInstall
-                    touch $out  # Just create an empty file to mark success
+                    touch $out
                     runHook postInstall
                   '';
                 };
@@ -82,7 +89,7 @@
           ]
         );
 
-        pythonEnv = pythonSet.mkVirtualEnv "hello-world-env" workspace.deps.default;
+        pythonEnv = pythonSet.mkVirtualEnv "crackornot-env" workspace.deps.default;
       in
       {
         packages = {
@@ -94,11 +101,17 @@
             type = "app";
             program = "${pythonEnv}/bin/hello";
           };
+          serve = {
+            type = "app";
+            program = "${pkgs.writeShellScript "serve" ''
+              ${pythonEnv}/bin/uvicorn crackornot:app --host 127.0.0.1 --port 8000 --reload
+            ''}";
+          };
         };
 
         # Add checks for testing
         checks = {
-          inherit (pythonSet.hello-world.passthru.tests) pytest;
+          inherit (pythonSet.crackornot.passthru.tests) pytest;
         };
 
         devShells.default = pkgs.mkShell {
